@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "pyramide-bot"
+version = "0.1.0"
+description = "bot for finance pyramide in aiogram"
+authors = ["Your Name <you@example.com>"]
+license = "none"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+aiogram = "^3.1.0"
+sqlalchemy = "^2.0.21"
+aiosqlite = "^0.19.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
