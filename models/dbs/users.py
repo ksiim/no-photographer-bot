@@ -1,29 +1,50 @@
-from sqlalchemy import Column, Integer, String
-from models.databases import Base, SessionLocal
+import asyncio
+
+from models.databases import Base, async_session
+
+from sqlalchemy import select
+from sqlalchemy.orm import Mapped
+from sqlalchemy.orm import mapped_column
+
+
 
 
 class User(Base):
-    __tablename__ = 'users'
+    __tablename__ = "users"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    telegram_id: Mapped[int]
+    full_name: Mapped[str]
+    username: Mapped[str]
     
-    id = Column(Integer, primary_key=True)
-    telegram_id = Column(Integer, unique=True)
-    full_name = Column(String)
-    username = Column(String)
-    
-    def __init__(self, telegram_id, full_name, username):
-        self.telegram_id = telegram_id
-        self.full_name = full_name
-        self.username = username
-        
     async def save(self):
-        session = SessionLocal()
-        await session.merge(self)
-        await session.commit()
-        await session.close()
+        async with async_session() as session:
+            await session.merge(self)
+            
+            await session.commit()
+    
+    @classmethod
+    async def get_user(cls, telegram_id):
+        async with async_session() as session:
+            stmt = select(cls).where(cls.telegram_id == telegram_id)
+            
+            user = await session.execute(stmt)
+            
+            return user.scalars().first()
+            
+    @classmethod
+    async def get_all_users(cls):
+        async with async_session() as session:
+            stmt = select(cls)
+            
+            users = await session.execute(stmt)
+            
+            return users.scalars().all()
         
     async def delete(self):
-        session = SessionLocal()
-        await session.delete(self)
-        await session.commit()
-
-    
+        async with async_session() as session:
+            
+            await session.delete(self)
+            
+            await session.commit()
+            

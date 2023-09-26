@@ -1,10 +1,15 @@
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
-
+from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy.ext.asyncio import AsyncAttrs
+from sqlalchemy.ext.asyncio import async_sessionmaker
+from sqlalchemy.orm import DeclarativeBase
 
 engine = create_async_engine('sqlite+aiosqlite:///db.sqlite3')
-SessionLocal = async_sessionmaker(bind=engine)
-Base = declarative_base()
+async_session = async_sessionmaker(engine, expire_on_commit=False)
+
+
+class Base(AsyncAttrs, DeclarativeBase):
+    pass
+
 
 async def create_database():
     async with engine.begin() as conn:
