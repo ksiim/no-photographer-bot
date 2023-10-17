@@ -15,8 +15,7 @@ logging.basicConfig(level=logging.INFO)
 
 
 async def main():
-    if not os.path.exists("db.sqlite3"):
-        await create_database()
+    create_database()
     await dp.start_polling(bot)
     
     

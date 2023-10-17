@@ -12,11 +12,21 @@ class User(Base):
     telegram_id = Column(Integer)
     full_name = Column(Text)
     username = Column(Text)
+    finish_date = Column(DateTime)
+    start_trial_date = Column(DateTime)
+    trialed = Column(Boolean)
+    admin = Column(Boolean)
     
-    def __init__(self, telegram_id, full_name, username):
+    def __init__(self, telegram_id: int, full_name: str, username: str,
+                 finish_date=None, start_trial_date=None, trialed=False,
+                 admin=False):
         self.telegram_id = telegram_id
         self.full_name = full_name
         self.username = username
+        self.finish_date = finish_date
+        self.start_trial_date = start_trial_date
+        self.trialed = trialed
+        self.admin = admin
         
     def save(self):
         session = Session()

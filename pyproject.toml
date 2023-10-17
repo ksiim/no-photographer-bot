@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "pyramide-bot"
+name = "yoga-bot"
 version = "0.1.0"
-description = "bot for finance pyramide in aiogram"
+description = "bot for selling yoga private chats"
 authors = ["Your Name <you@example.com>"]
 license = "none"
 readme = "README.md"
