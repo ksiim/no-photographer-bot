@@ -9,6 +9,7 @@ import handlers
 
 from models.databases import create_database
 
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 # add logging
 logging.basicConfig(level=logging.INFO)
@@ -16,6 +17,9 @@ logging.basicConfig(level=logging.INFO)
 
 async def main():
     create_database()
+    scheduler = AsyncIOScheduler()
+    scheduler.add_job(handlers.user.everyday_task, trigger='interval', seconds=3)
+    scheduler.start()
     await dp.start_polling(bot)
     
     

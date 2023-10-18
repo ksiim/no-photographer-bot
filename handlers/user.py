@@ -23,6 +23,37 @@ import datetime
 CHANNEL_ID = -1001980386639
 
 
+async def everyday_task():
+    for user in User.get_all_users():
+        try:
+            
+            if user.trialed:
+                if (datetime.datetime.now() - user.start_trial_date).days == 1:
+                    await bot.send_message(chat_id=user.telegram_id,
+                                           text='Пробный период закончился!\nТы можешь купить доступ к каналу на один месяц или три месяца',
+                                           reply_markup=subscribe_keyboard)
+                    await kick_user(telegram_id=user.telegram_id)
+                    return
+
+            if (datetime.datetime.now() - user.finish_date).days == -3:
+                await bot.send_message(chat_id=user.telegram_id,
+                                       text='Твоя подписка закончится через три дня. Продли ее или я буду вынужден выкинуть тебя из чата',
+                                       reply_markup=subscribe_keyboard)
+                return
+            if (datetime.datetime.now() - user.finish_date).days >= 0:
+                await bot.send_message(chat_id=user.telegram_id,
+                                       text='Твоя подписка закончилась и я выкинул тебя из канала.\nТы можешь купить ее еще',
+                                       reply_markup=subscribe_keyboard)
+        except:
+            pass
+        
+async def kick_user(telegram_id: int):
+    await bot.ban_chat_member(chat_id=CHANNEL_ID,
+                              user_id=telegram_id)
+    await bot.unban_chat_member(chat_id=CHANNEL_ID,
+                                user_id=telegram_id)
+
+
 @dp.message(Command('start'))
 async def start_message(message: Message, state: FSMContext):
     if User.get_by_telegram_id(message.from_user.id) == None:
@@ -109,11 +140,34 @@ async def get_media_reviews():
     
 @dp.message(F.text == '💫Отзывы')
 async def reviews_message(message: Message, state: FSMContext):
+    media = await get_media_reviews()
     await bot.send_media_group(chat_id=message.from_user.id,
-                               media=await get_media_reviews())
+                               media=media.build())
     await message.answer(
         text='Больше отзывов в моем инстаграме',
         reply_markup=subscribe_keyboard
+    )
+
+@dp.message(F.text =='👐Ответы на вопросы')
+async def get_q_and_a(message: Message, state: FSMContext):
+    await message.delete()
+    await message.answer(
+        text='''1)Какой уровень? - 
+
+Подойдёт новичкам и опытным практикующим.
+На канале мы тренируем базу, поэтому подойдет всем.
+2)Как ориентироваться в канале? 
+В канале есть хэштеги («руки», «растяжка», «кор», «балансы» и т.д.), чтобы вам было легко ориентироваться.
+А еще есть хэштег «эфир», по которому можно найти тематический эфир.
+Вся важная информация находится в закрепе.
+3)Длительность практик?
+Занятия идут от 20 минут, до 1:30. 
+Вы можете заниматься по разным практикам каждый день, можете 2 раза в неделю. Можете в записи, можете в прямом эфире.
+4)Что мне нужно для практики?
+Место 2х2 метра и коврик.
+5)Сколько стоит?
+1500₽ на целый месяц с доступом ко всем практикам и прямыми эфирами, так же есть тариф на 3 месяца – 3000р''',
+        reply_markup=close_keyboard
     )
     
 @dp.callback_query(GetSubscribeCallback.filter())
@@ -121,6 +175,7 @@ async def get_subscribe_callback(callback: CallbackQuery,
                                  callback_data: CallbackData,
                                  state: FSMContext):
     amount = callback_data.amount
+    await callback.message.delete_reply_markup()
     if amount == 0:
         await trial_period(callback=callback)
         return
@@ -184,6 +239,7 @@ async def check_payment_callback(
     callback_data: CallbackData,
     state: FSMContext
 ):
+    await callback.message.delete_reply_markup()
     await callback.message.answer(
         text='Осталось дождаться подтверждения перевода. Я добавлю тебя в чат, когда администратор подвердит оплату'
     )
