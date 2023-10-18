@@ -3,6 +3,8 @@ from bot import bot
 
 from .callbacks import *
 
+from models.dbs.reviews import *
+
 
 start_keyboard = ReplyKeyboardMarkup(
     keyboard=[
@@ -44,6 +46,19 @@ async def generate_confirm_payment_keyboard(amount, fio, telegram_id):
     )
     return confirm_payment_keyboard
 
+async def generate_delete_review_keyboard():
+    reviews = Review.get_all_reviews()
+    buttons = []
+    for review in reviews:
+        buttons.append([InlineKeyboardButton(
+            text=review.name,
+            callback_data=DeleteReviewCallback(name=review.name).pack()
+        )])
+    delete_review_keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[buttons]
+    )
+    return delete_review_keyboard
+
 close_keyboard = InlineKeyboardMarkup(
     inline_keyboard=[
         [InlineKeyboardButton(text='Закрыть', callback_data='close')]
@@ -52,6 +67,11 @@ close_keyboard = InlineKeyboardMarkup(
 
 admin_keyboard = InlineKeyboardMarkup(
     inline_keyboard=[
-        [InlineKeyboardButton(text='Изменить фото "Обо мне"', callback_data='change-about-photo')]
+        [InlineKeyboardButton(text='Изменить фото "Обо мне"', callback_data='change-about-photo')],
+        [InlineKeyboardButton(text='Удалить отзыв', callback_data=ReviewCallback(
+            operation='delete').pack()),
+         InlineKeyboardButton(text='Добавить отзыв', callback_data=ReviewCallback(
+             operation='add'
+         ).pack())]
     ]
 )

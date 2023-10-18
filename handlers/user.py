@@ -1,12 +1,18 @@
 from bot import dp, bot
 
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, Message, CallbackQuery
+from aiogram.types import (
+    InlineKeyboardMarkup,
+    InlineKeyboardButton,
+    Message, CallbackQuery,
+)
 from aiogram.filters.command import Command
 from aiogram.fsm.context import FSMContext
+from aiogram.utils.media_group import MediaGroupBuilder
 from aiogram import F
 
 from models.dbs.users import *
-from models.dbs.message import Messages
+from models.dbs.message import *
+from models.dbs.reviews import *
 
 from .callbacks import *
 from .markups import *
@@ -92,6 +98,21 @@ async def subscribe_message(message: Message, state: FSMContext):
 '''
     await message.answer(
         text=subscribe_text,
+        reply_markup=subscribe_keyboard
+    )
+    
+async def get_media_reviews():
+    media = MediaGroupBuilder()
+    for review in Review.get_all_reviews():
+        media.add_photo(media=review.photo)
+    return media
+    
+@dp.message(F.text == '💫Отзывы')
+async def reviews_message(message: Message, state: FSMContext):
+    await bot.send_media_group(chat_id=message.from_user.id,
+                               media=await get_media_reviews())
+    await message.answer(
+        text='Больше отзывов в моем инстаграме',
         reply_markup=subscribe_keyboard
     )
     

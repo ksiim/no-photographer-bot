@@ -12,3 +12,9 @@ class ConfirmPaymentCallback(CallbackData, prefix='confirm_payment'):
     amount: int
     fio: str
     telegram_id: int
+    
+class ReviewCallback(CallbackData, prefix='review'):
+    operation: str
+    
+class DeleteReviewCallback(CallbackData, prefix='delete_review'):
+    name: str

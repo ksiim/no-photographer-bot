@@ -6,7 +6,8 @@ from aiogram.fsm.context import FSMContext
 from aiogram import F
 
 from models.dbs.users import *
-from models.dbs.message import Messages
+from models.dbs.message import *
+from models.dbs.reviews import *
 
 from .callbacks import *
 from .markups import *
@@ -56,6 +57,57 @@ async def admin_message(message: Message, state: FSMContext):
         text='Привет, админ. Что будешь делать?',
         reply_markup=admin_keyboard
     )
+    
+@dp.callback_query(ReviewCallback.filter())
+async def review_callback(callback: CallbackQuery,
+                          callback_data: CallbackData,
+                          state: FSMContext):
+    if callback_data.operation == 'add':
+        await callback.message.answer(
+            text='Отправь имя того человека, чей отзыв ты добавляешь'
+        )
+        await state.set_state(ReviewState.name)
+        return
+    elif callback_data.operation == 'delete':
+        await callback.message.answer(
+            text='',
+            reply_markup=await generate_delete_review_keyboard()
+        )
+        return
+    
+@dp.callback_query(DeleteReviewCallback.filter())
+async def delete_chosen_review(callback: CallbackQuery,
+                               callback_data: CallbackData,
+                               state: FSMContext):
+    review = Review.get_by_name(name=callback_data.name)
+    review.delete()
+    
+    await callback.message.delete()
+    
+    await callback.message.answer(
+        text='Выбранный отзыв был успешно удален'
+    )
+
+    
+@dp.message(ReviewState.name)
+async def get_review_name(message: Message, state: FSMContext):
+    name = message.text
+    await state.update_data(name=name)
+    await message.answer(
+        text='Теперь отправь фотографию отзыва!'
+    )
+    await state.set_state(ReviewState.photo)
+    
+@dp.message(ReviewState.photo, F.photo)
+async def get_review_photo(message: Message, state: FSMContext):
+    data = await state.get_data()
+    review = Review(name=data["name"], photo=message.photo[-1].file_id)
+    review.save()
+    
+    await message.answer(
+        text='Отзыв был успешно добавлен'
+    )
+    await state.clear()
     
 @dp.callback_query(F.data == 'change-about-photo')
 async def change_about_photo(callback: CallbackQuery, state: FSMContext):

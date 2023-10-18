@@ -6,3 +6,7 @@ class ChangeState(StatesGroup):
     
 class PaymentState(StatesGroup):
     get_fio = State()
+    
+class ReviewState(StatesGroup):
+    name = State()
+    photo = State()
