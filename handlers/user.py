@@ -22,6 +22,16 @@ import datetime
 
 CHANNEL_ID = -1001980386639
 
+async def check_trial():
+    for user in User.get_all_users():
+        if user.trialed:
+            trial_time = datetime.datetime.now() - user.start_trial_date
+            if trial_time.hours == 6:
+                await bot.send_message(chat_id=user.telegram_id,
+                                    text='Твоя подписка закончилась😔\nПродолжить тренировки👇',
+                                    reply_markup=subscribe_keyboard)
+                await kick_user(telegram_id=user.telegram_id)
+                return
 
 async def everyday_task():
     for user in User.get_all_users():
@@ -29,13 +39,6 @@ async def everyday_task():
             member = await bot.get_chat_member(chat_id=CHANNEL_ID,
                                                user_id=user.telegram_id)
             if member.status.name != 'LEFT':
-                if user.trialed:
-                    if (datetime.datetime.now() - user.start_trial_date).days == 1:
-                        await bot.send_message(chat_id=user.telegram_id,
-                                            text='Твоя подписка закончилась😔\nПродолжить тренировки👇',
-                                            reply_markup=subscribe_keyboard)
-                        await kick_user(telegram_id=user.telegram_id)
-                        return
 
                 if (datetime.datetime.now() - user.finish_date).days == -3:
                     await bot.send_message(chat_id=user.telegram_id,
