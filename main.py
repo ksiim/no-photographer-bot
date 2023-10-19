@@ -9,7 +9,6 @@ import handlers
 
 from models.databases import create_database
 
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 # add logging
 logging.basicConfig(level=logging.INFO)
