@@ -18,7 +18,7 @@ logging.basicConfig(level=logging.INFO)
 async def main():
     create_database()
     scheduler = AsyncIOScheduler()
-    scheduler.add_job(handlers.user.everyday_task, trigger='interval', seconds=3)
+    scheduler.add_job(handlers.user.everyday_task, trigger='interval', seconds=60*60*24)
     scheduler.start()
     await dp.start_polling(bot)
     

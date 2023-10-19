@@ -70,7 +70,7 @@ async def review_callback(callback: CallbackQuery,
         return
     elif callback_data.operation == 'delete':
         await callback.message.answer(
-            text='',
+            text='Выбери отзыв, который хочешь удалить',
             reply_markup=await generate_delete_review_keyboard()
         )
         return

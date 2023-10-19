@@ -8,20 +8,20 @@ from models.dbs.reviews import *
 
 start_keyboard = ReplyKeyboardMarkup(
     keyboard=[
-        [KeyboardButton(text='🧘‍♀️Обо мне'), KeyboardButton(text='🤍Подписка')],
-        [KeyboardButton(text='💫Отзывы'), KeyboardButton(text='👐Ответы на вопросы')],
-        [KeyboardButton(text='☎️Связь со мной')],
+        [KeyboardButton(text='🧘🏻‍♂️Обо мне'), KeyboardButton(text='✍️Подписка')],
+        [KeyboardButton(text='🗣️Отзывы'), KeyboardButton(text='👐Ответы на вопросы')],
+        [KeyboardButton(text='🤝Связь со мной')],
     ],
     resize_keyboard=True
 )
 
 subscribe_keyboard = InlineKeyboardMarkup(
     inline_keyboard=[
-        [InlineKeyboardButton(text='Оформить подписку на месяц Цена 1490Р',
+        [InlineKeyboardButton(text='Подписка на месяц Цена 1490Р',
                               callback_data=GetSubscribeCallback(amount=1490).pack())],
-        [InlineKeyboardButton(text='Оформить подписку на 3 месяца Цена 3000Р',
+        [InlineKeyboardButton(text='Подписка на 3 месяца Цена 3000Р',
                               callback_data=GetSubscribeCallback(amount=3000).pack())],
-        [InlineKeyboardButton(text='Вступить в группу на 24 часа бесплатно',
+        [InlineKeyboardButton(text='Пробные 24 часа бесплатно',
                               callback_data=GetSubscribeCallback(amount=0).pack())],
     ]
 )
@@ -50,12 +50,12 @@ async def generate_delete_review_keyboard():
     reviews = Review.get_all_reviews()
     buttons = []
     for review in reviews:
-        buttons.append([InlineKeyboardButton(
+        buttons += [[InlineKeyboardButton(
             text=review.name,
             callback_data=DeleteReviewCallback(name=review.name).pack()
-        )])
+        )]]
     delete_review_keyboard = InlineKeyboardMarkup(
-        inline_keyboard=[buttons]
+        inline_keyboard=[*buttons]
     )
     return delete_review_keyboard
 
@@ -73,5 +73,16 @@ admin_keyboard = InlineKeyboardMarkup(
          InlineKeyboardButton(text='Добавить отзыв', callback_data=ReviewCallback(
              operation='add'
          ).pack())]
+    ]
+)
+
+q_and_a = ReplyKeyboardMarkup(
+    keyboard=[
+        [KeyboardButton(text='Какой уровень❓')],
+        [KeyboardButton(text='Как ориентироваться в канале❓')],
+        [KeyboardButton(text='Длительность практик❓')],
+        [KeyboardButton(text='Что мне нужно для практики❓')],
+        [KeyboardButton(text='Сколько стоит❓')],
+        [KeyboardButton(text='Закрыть')],
     ]
 )

@@ -37,7 +37,7 @@ class Review(Base):
         session = Session()
         
         review = session.query(cls).filter(cls.name == name).first()
-        
+        session.close()
         return review
         
     def delete(self):

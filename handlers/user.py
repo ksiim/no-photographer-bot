@@ -26,24 +26,27 @@ CHANNEL_ID = -1001980386639
 async def everyday_task():
     for user in User.get_all_users():
         try:
-            
-            if user.trialed:
-                if (datetime.datetime.now() - user.start_trial_date).days == 1:
-                    await bot.send_message(chat_id=user.telegram_id,
-                                           text='Пробный период закончился!\nТы можешь купить доступ к каналу на один месяц или три месяца',
-                                           reply_markup=subscribe_keyboard)
-                    await kick_user(telegram_id=user.telegram_id)
-                    return
+            member = await bot.get_chat_member(chat_id=CHANNEL_ID,
+                                               user_id=user.telegram_id)
+            if member.status.name != 'LEFT':
+                if user.trialed:
+                    if (datetime.datetime.now() - user.start_trial_date).days == 1:
+                        await bot.send_message(chat_id=user.telegram_id,
+                                            text='Твоя подписка закончилась😔\nПродолжить тренировки👇',
+                                            reply_markup=subscribe_keyboard)
+                        await kick_user(telegram_id=user.telegram_id)
+                        return
 
-            if (datetime.datetime.now() - user.finish_date).days == -3:
-                await bot.send_message(chat_id=user.telegram_id,
-                                       text='Твоя подписка закончится через три дня. Продли ее или я буду вынужден выкинуть тебя из чата',
-                                       reply_markup=subscribe_keyboard)
-                return
-            if (datetime.datetime.now() - user.finish_date).days >= 0:
-                await bot.send_message(chat_id=user.telegram_id,
-                                       text='Твоя подписка закончилась и я выкинул тебя из канала.\nТы можешь купить ее еще',
-                                       reply_markup=subscribe_keyboard)
+                if (datetime.datetime.now() - user.finish_date).days == -3:
+                    await bot.send_message(chat_id=user.telegram_id,
+                                        text='Твоя подписка закончится через три дня. Продлить👇',
+                                        reply_markup=subscribe_keyboard)
+                    return
+                if (datetime.datetime.now() - user.finish_date).days >= 0:
+                    await bot.send_message(chat_id=user.telegram_id,
+                                        text='Твоя подписка закончилась😔\nПродолжить тренировки👇',
+                                        reply_markup=subscribe_keyboard)
+                    await kick_user(telegram_id=user.telegram_id)
         except:
             pass
         
@@ -54,6 +57,7 @@ async def kick_user(telegram_id: int):
                                 user_id=telegram_id)
 
 
+@dp.message(F.text == 'Закрыть')
 @dp.message(Command('start'))
 async def start_message(message: Message, state: FSMContext):
     if User.get_by_telegram_id(message.from_user.id) == None:
@@ -81,7 +85,7 @@ async def start_message(message: Message, state: FSMContext):
 async def close_callback(callback: CallbackQuery, state: FSMContext):
     await callback.message.delete()
 
-@dp.message(F.text == '🧘‍♀️Обо мне')
+@dp.message(F.text == '🧘🏻‍♂️Обо мне')
 async def about_me(message: Message, state: FSMContext):
     await message.delete()
     
@@ -100,7 +104,7 @@ async def about_me(message: Message, state: FSMContext):
                          chat_id=message.from_user.id,
                          reply_markup=close_keyboard)
     
-@dp.message(F.text == '🤍Подписка')
+@dp.message(F.text == '✍️Подписка')
 async def subscribe_message(message: Message, state: FSMContext):
     subscribe_text = '''На канале безопасные практики, там нет лотосов и стоек на голове, но в то же время они за короткий срок построят мышечный корсет, подтянут ваше тело, разовьют гибкость.
         
@@ -138,7 +142,7 @@ async def get_media_reviews():
         media.add_photo(media=review.photo)
     return media
     
-@dp.message(F.text == '💫Отзывы')
+@dp.message(F.text == '🗣️Отзывы')
 async def reviews_message(message: Message, state: FSMContext):
     media = await get_media_reviews()
     await bot.send_media_group(chat_id=message.from_user.id,
@@ -152,22 +156,38 @@ async def reviews_message(message: Message, state: FSMContext):
 async def get_q_and_a(message: Message, state: FSMContext):
     await message.delete()
     await message.answer(
-        text='''1)Какой уровень? - 
+        text='''Выбери вопрос, на который желаешь увидеть ответ''',
+        reply_markup=q_and_a
+    )
+    
+@dp.message(F.text == 'Какой уровень❓')
+async def level(message: Message, state: FSMContext):
+    await message.answer(
+        text='Подойдёт новичкам и опытным практикующим.\nНа канале мы тренируем базу.'
+    )
+    
+@dp.message(F.text == 'Как ориентироваться в канале❓')
+async def orientir(message: Message, state: FSMContext):
+    await message.answer(
+        text='В канале есть хэштеги («руки», «растяжка», «кор», «балансы» и т.д.), чтобы вам было легко ориентироваться.\nА еще есть хэштег «эфир», по которому можно найти тематический эфир.\nВся важная информация находится в закрепе.'
+    )
 
-Подойдёт новичкам и опытным практикующим.
-На канале мы тренируем базу, поэтому подойдет всем.
-2)Как ориентироваться в канале? 
-В канале есть хэштеги («руки», «растяжка», «кор», «балансы» и т.д.), чтобы вам было легко ориентироваться.
-А еще есть хэштег «эфир», по которому можно найти тематический эфир.
-Вся важная информация находится в закрепе.
-3)Длительность практик?
-Занятия идут от 20 минут, до 1:30. 
-Вы можете заниматься по разным практикам каждый день, можете 2 раза в неделю. Можете в записи, можете в прямом эфире.
-4)Что мне нужно для практики?
-Место 2х2 метра и коврик.
-5)Сколько стоит?
-1500₽ на целый месяц с доступом ко всем практикам и прямыми эфирами, так же есть тариф на 3 месяца – 3000р''',
-        reply_markup=close_keyboard
+@dp.message(F.text == 'Длительность практик❓')
+async def dlitelnost(message: Message, state: FSMContext):
+    await message.answer(
+        text='Занятия идут от 20 минут, до 1:30. \nВы можете заниматься по разным практикам каждый день, можете 2 раза в неделю. Можете в записи, можете в прямом эфире.'
+    )
+    
+@dp.message(F.text == 'Что мне нужно для практики❓')
+async def mesto(message: Message):
+    await message.answer(
+        text='Место 2х2 метра и коврик.'
+    )
+    
+@dp.message(F.text == 'Сколько стоит❓')
+async def howmuchforthis(message: Message):
+    await message.answer(
+        text='1500₽ на целый месяц с доступом ко всем практикам и прямым эфирам, так же есть тариф на 3 месяца – 3000р'
     )
     
 @dp.callback_query(GetSubscribeCallback.filter())
@@ -196,12 +216,12 @@ async def get_fio_for_payment(message: Message, state: FSMContext):
     amount = data["amount"]
     fio = message.text
     await message.answer(
-        text=f'Теперь переведи {amount}P на счёт\n<code>2200700449365633</code>\n+<code>79959182053</code> Тинькофф\nПолучатель: Беккер Даниил Юрьевич',
+        text=f'Реквизиты для перевода\n<code>2200700449365633</code>\n+<code>79959182053</code> Тинькофф\nПолучатель: Беккер Даниил Юрьевич\n\nСумма: {amount}',
         reply_markup=await generate_check_payment_keyboard(amount=amount,
                                                            fio=fio)
     )
     
-@dp.message(F.text == '☎️Связь со мной')
+@dp.message(F.text == '🤝Связь со мной')
 async def message_to_me(message: Message, state: FSMContext):
     await message.delete()
     await message.answer(
@@ -241,7 +261,7 @@ async def check_payment_callback(
 ):
     await callback.message.delete_reply_markup()
     await callback.message.answer(
-        text='Осталось дождаться подтверждения перевода. Я добавлю тебя в чат, когда администратор подвердит оплату'
+        text='В течение 12 часов администатор подтвердит оплату и я добавлю тебя в чат!'
     )
     fio = callback_data.fio
     await state.clear()
