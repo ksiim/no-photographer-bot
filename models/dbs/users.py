@@ -1,5 +1,4 @@
-from sqlalchemy import Column, Float, ForeignKey, Integer, PickleType, Text, Boolean, DateTime
-from sqlalchemy.ext.mutable import MutableList
+from sqlalchemy import Column, Integer, Text, Boolean
 from sqlalchemy.orm import relationship
 
 from models.databases import Base, Session
@@ -13,6 +12,7 @@ class User(Base):
     full_name = Column(Text)
     username = Column(Text)
     admin = Column(Boolean)
+    used_codes = relationship("codes", secondary="codes_to_users")
     
     def __init__(self, telegram_id: int, full_name: str, username: str,
                  admin=False):
@@ -27,6 +27,9 @@ class User(Base):
         session.merge(self)
         
         session.commit()
+        
+    def can_use_promocode(self, promocode):
+        return promocode not in self.used_promocodes
         
     @classmethod
     def get_by_telegram_id(cls, telegram_id: int):

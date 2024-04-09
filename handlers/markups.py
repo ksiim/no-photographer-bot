@@ -2,3 +2,5 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeybo
 from bot import bot
 
 from .callbacks import *
+
+start_text = "start text"
