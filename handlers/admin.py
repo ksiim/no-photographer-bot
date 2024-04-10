@@ -5,7 +5,7 @@ from aiogram.filters.command import Command
 from aiogram.fsm.context import FSMContext
 from aiogram import F
 
-from models.dbs.users import *
+from models.dbs.models import *
 
 from .callbacks import *
 from .markups import *

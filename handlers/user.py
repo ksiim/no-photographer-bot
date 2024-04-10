@@ -7,10 +7,10 @@ from aiogram.types import (
 )
 from aiogram.filters.command import Command
 from aiogram.fsm.context import FSMContext
-from aiogram.utils.media_group import MediaGroupBuilder
 from aiogram import F
 
-from models.dbs.users import *
+from models.dbs.orm import Orm
+from models.dbs.models import *
 
 from .callbacks import *
 from .markups import *
@@ -30,10 +30,13 @@ async def send_start_message(telegram_id: int):
     )
     
 async def create_user(message: Message):
-    if User.get_by_telegram_id(message.from_user.id) is None:
-        user = User(
-            telegram_id=message.from_user.id,
-            username=message.from_user.username,
-            full_name=message.from_user.full_name
-        )
-        user.save()
+    user = User(
+        full_name=message.from_user.full_name,
+        telegram_id=message.from_user.id,
+        username=message.from_user.username
+    )
+    await Orm.save_user(user)
+
+@dp.message(Command("q"))
+async def q_message(message: Message):
+    pass
