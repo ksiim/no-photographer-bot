@@ -19,7 +19,7 @@ from .states import *
 async def start_message_handler(message: Message, state: FSMContext):
     await state.clear()
     
-    await create_user(message)
+    await Orm.create_user(message)
     await send_start_message(message.from_user.id)
     
 async def send_start_message(telegram_id: int):
@@ -27,13 +27,4 @@ async def send_start_message(telegram_id: int):
         chat_id=telegram_id,
         text=start_text
     )
-    
-async def create_user(message: Message):
-    if await Orm.get_user_by_telegram_id(message.from_user.id) is None:
-        user = User(
-            full_name=message.from_user.full_name,
-            telegram_id=message.from_user.id,
-            username=message.from_user.username
-        )
-        await Orm.save_user(user)
         
