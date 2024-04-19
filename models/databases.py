@@ -1,4 +1,3 @@
-import asyncio
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 import os
@@ -10,7 +9,6 @@ engine = create_async_engine(f'sqlite+aiosqlite:///{DB_DIR}')
 Session = async_sessionmaker(engine)
 
 Base = declarative_base()
-
 
 async def create_database():
     if not os.path.exists(DB_NAME):

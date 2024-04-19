@@ -1,13 +1,12 @@
-from bot import dp, bot
-
-from aiogram.types import (
-    InlineKeyboardMarkup,
-    InlineKeyboardButton,
-    Message, CallbackQuery,
-)
+from aiogram import F
 from aiogram.filters.command import Command
 from aiogram.fsm.context import FSMContext
-from aiogram import F
+from aiogram.types import (
+    Message, CallbackQuery,
+    CallbackData, FSInputFile
+)
+
+from bot import dp, bot
 
 from models.dbs.orm import Orm
 from models.dbs.models import *
@@ -30,13 +29,11 @@ async def send_start_message(telegram_id: int):
     )
     
 async def create_user(message: Message):
-    user = User(
-        full_name=message.from_user.full_name,
-        telegram_id=message.from_user.id,
-        username=message.from_user.username
-    )
-    await Orm.save_user(user)
-
-@dp.message(Command("q"))
-async def q_message(message: Message):
-    pass
+    if await Orm.get_user_by_telegram_id(message.from_user.id) is None:
+        user = User(
+            full_name=message.from_user.full_name,
+            telegram_id=message.from_user.id,
+            username=message.from_user.username
+        )
+        await Orm.save_user(user)
+        
