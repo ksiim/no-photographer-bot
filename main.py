@@ -2,8 +2,6 @@ import asyncio
 
 from bot import dp, bot
 
-from aiogram.types import BotCommand
-
 import logging
 
 import handlers
