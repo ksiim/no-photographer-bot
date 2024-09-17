@@ -2,8 +2,7 @@ from aiogram import F
 from aiogram.filters.command import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import (
-    Message, CallbackQuery,
-    CallbackData, FSInputFile
+    Message, CallbackQuery, FSInputFile
 )
 
 from bot import dp, bot
