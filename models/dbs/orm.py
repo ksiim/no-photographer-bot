@@ -47,7 +47,7 @@ class Orm:
             await bot.send_photo(
                 chat_id=photo_session.user.telegram_id,
                 photo=FSInputFile(photo_path),
-                caption="Фото добавлено в сессию.",
+                caption=f"{filename}",
                 reply_markup=await generate_raw_photo_markup(photo.id)
             )
     
