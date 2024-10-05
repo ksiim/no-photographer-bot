@@ -14,6 +14,48 @@ from sqlalchemy.orm import selectinload
 class Orm:
     
     @staticmethod
+    async def get_last_session_by_telegram_id(telegram_id):
+        async with Session() as session:
+            query = (
+                select(PhotoSession)
+                .join(PhotoSession.user)
+                .where(User.telegram_id == telegram_id)
+            )
+            photo_session = (await session.execute(query)).scalars().all()[-1]
+            return photo_session
+    @staticmethod
+    async def end_session():
+        async with Session() as session:
+            photo_session = await Orm.get_active_session()
+            if photo_session is None:
+                return
+            photo_session.end_time = datetime.datetime.now()
+            session.add(photo_session)
+            await session.commit()
+            await session.refresh(photo_session)
+            return photo_session.user
+    
+    @staticmethod
+    async def extend_session(user_id, extend_time):
+        async with Session() as session:
+            query = (
+                select(PhotoSession)
+                .join(PhotoSession.user)
+                .where(User.telegram_id == user_id)
+                .options(selectinload(PhotoSession.user))
+            )
+            photo_session = (await session.execute(query)).scalars().all()[-1]
+            photo_session.end_time += datetime.timedelta(minutes=extend_time)
+            await session.commit()
+    
+    @staticmethod
+    async def get_session(telegram_id):
+        async with Session() as session:
+            query = select(PhotoSession).join(PhotoSession.user).where(PhotoSession.user.telegram_id == telegram_id)
+            photo_session = (await session.execute(query)).scalar_one_or_none()
+            return photo_session
+    
+    @staticmethod
     async def get_photo_by_filename(filename):
         async with Session() as session:
             query = select(Photo).where(Photo.photo_filename == filename)
@@ -26,6 +68,24 @@ class Orm:
             query = select(Photo).where(Photo.id == photo_id)
             photo = (await session.execute(query)).scalar_one_or_none()
             return photo
+        
+    @staticmethod
+    async def get_active_session():
+        async with Session() as session:
+            now = datetime.datetime.now()
+            query = (
+                select(PhotoSession)
+                .join(PhotoSession.user)
+                .where(PhotoSession.end_time > now)
+                .options(selectinload(PhotoSession.user))
+            )
+            result = await session.execute(query)
+            active_sessions = result.scalars().all()
+            if len(active_sessions) == 0:
+                return None
+            else:
+                active_session = active_sessions[-1]
+            return active_session
     
     @staticmethod
     async def create_photo(filename: str):
@@ -33,7 +93,7 @@ class Orm:
             if (await Orm.get_photo_by_filename(filename)) is not None:
                 return
             query = select(PhotoSession).where(PhotoSession.end_time == None)
-            photo_session = (await session.execute(query)).scalars().all()[-1]
+            photo_session = await Orm.get_active_session()
             photo = Photo(
                 session_id=photo_session.id,
                 photo_filename=filename
@@ -42,25 +102,12 @@ class Orm:
             await session.commit()
             await session.refresh(photo)
             photo_path = await get_photo_path_by_filename(filename)
-            # до этого момента все работает
-            # строка ниже просто не выполняется и ничего не выводит
             await bot.send_photo(
                 chat_id=photo_session.user.telegram_id,
                 photo=FSInputFile(photo_path),
                 caption=f"{filename}",
                 reply_markup=await generate_raw_photo_markup(photo.id)
             )
-    
-    @staticmethod
-    async def end_session():
-        async with Session() as session:
-            query = select(PhotoSession).where(PhotoSession.end_time == None)
-            photo_session = (await session.execute(query)).scalars().all()[-1]
-            photo_session.end_time = datetime.datetime.now()
-            await session.commit()
-            await session.refresh(photo_session)
-            user = photo_session.user
-            return user
     
     @staticmethod
     async def get_admin():
@@ -70,35 +117,16 @@ class Orm:
             return admin
         
     @staticmethod
-    async def end_session_after_one_hour(photo_session_id):
-        await asyncio.sleep(60*60)
-        async with Session() as session:
-            query = select(PhotoSession).where(PhotoSession.id == photo_session_id)
-            photo_session = (await session.execute(query)).scalar_one()
-            if photo_session.end_time is None:
-                photo_session.end_time = datetime.datetime.now()
-                await session.commit()
-                await session.refresh(photo_session)
-                await bot.send_message(
-                    chat_id=photo_session.user.telegram_id,
-                    text=end_session_one_hour_text,
-                )
-                await bot.send_message(
-                    chat_id=(await Orm.get_admin()).telegram_id,
-                    text=f"Сессия пользователя {photo_session.user_fio} завершена по истечении часа."
-                )
-    
-    @staticmethod
     async def start_new_session(user):
         async with Session() as session:
             photo_session = PhotoSession(
                 user_id=user.id,
-                user_fio=user.fio
+                user_fio=user.fio,
+                end_time=datetime.datetime.now() + datetime.timedelta(hours=1)
             )
             session.add(photo_session)
             await session.commit()
             await session.refresh(photo_session)
-            asyncio.create_task(Orm.end_session_after_one_hour(photo_session.id))
     
     @classmethod
     async def create_user(cls, message, fio, phone_number):

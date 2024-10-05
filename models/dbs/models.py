@@ -14,13 +14,14 @@ class User(Base):
     fio: Mapped[str]
     phone_number: Mapped[str]
     registration_time: Mapped[datetime.datetime] = mapped_column(default=datetime.datetime.now)
+    photo_sessions: Mapped[list["PhotoSession"]] = relationship("PhotoSession", back_populates="user")
     
 class PhotoSession(Base):
     __tablename__ = 'photo_sessions'
     
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
-    user: Mapped[User] = relationship(User, lazy="joined")
+    user: Mapped[User] = relationship("User", back_populates="photo_sessions")
     user_fio: Mapped[str]
     start_time: Mapped[datetime.datetime] = mapped_column(default=datetime.datetime.now)
     end_time: Mapped[datetime.datetime] = mapped_column(nullable=True)

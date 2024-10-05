@@ -15,8 +15,11 @@ from models.databases import create_database
 logging.basicConfig(level=logging.INFO)
 
 async def main():
+    scheduler = AsyncIOScheduler()
+    scheduler.add_job(handlers.extend_and_end_task, "interval", minutes=1)
+    scheduler.start()
     watcher = PhotoWatcher(directory=directory)
-    watcher_task = asyncio.create_task(watcher.start())
+    asyncio.create_task(watcher.start())
     # try:
     await asyncio.gather(
         create_database(),
