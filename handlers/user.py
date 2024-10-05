@@ -38,7 +38,6 @@ async def extend_and_end_task():
             chat_id=admin_id,
             text=await generate_session_time_ended_text_for_admin(user.fio) + timer_text,
         )
-    
 
 @dp.message(Command('extend'))
 async def testing_extend(message: Message):
@@ -125,3 +124,5 @@ async def send_original_photo(callback: CallbackQuery, callback_data: dict):
         chat_id=callback.from_user.id,
         document=FSInputFile(photo_path),
     )
+    
+    await Orm.sended_photo(photo_id=photo_id)

@@ -14,6 +14,18 @@ from sqlalchemy.orm import selectinload
 class Orm:
     
     @staticmethod
+    async def sended_photo(photo_id):
+        async with Session() as session:
+            query = (
+                select(Photo)
+                .where(Photo.id == photo_id)
+            )
+            photo = (await session.execute(query)).scalars().all()[-1]
+            photo.sended = True
+            session.add(photo)
+            await session.commit()
+        
+    @staticmethod
     async def get_last_session_by_telegram_id(telegram_id):
         async with Session() as session:
             query = (
@@ -23,6 +35,7 @@ class Orm:
             )
             photo_session = (await session.execute(query)).scalars().all()[-1]
             return photo_session
+        
     @staticmethod
     async def end_session():
         async with Session() as session:
