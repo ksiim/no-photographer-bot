@@ -61,7 +61,7 @@ async def end_session(callback: CallbackQuery):
     user = await Orm.end_session()
     timer_text = await generate_end_session_timer_text(session=await Orm.get_last_session_by_telegram_id(user.telegram_id))
     await callback.message.edit_text(
-        text=callback.message.text[0:callback.message.text.find(session_time_ended_text)] + session_handled_ended_text + timer_text,
+        text=callback.message.text + session_handled_ended_text + timer_text,
     )
     await bot.send_message(
         chat_id=user.telegram_id,
